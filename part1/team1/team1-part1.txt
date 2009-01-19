@@ -1,0 +1,4 @@
+Team 1: Andy Mroczkowski, Pete Wolk
+Jan 15 2009
+
+Pete was more interested in iPhone apps, so we decided to jump in from that route and build a simple Tip Calculator.
