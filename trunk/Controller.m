@@ -10,18 +10,19 @@
 
 @implementation Controller
 
-@synthesize totalDisplayValue;
+@synthesize numDisplayValue;
 @synthesize opDisplayValue;
 @synthesize curOp;
-@synthesize accumulator;
+@synthesize total;
 
-
+// This method is called once when the object is unarchived from
+// the nib.  Setup and initialization code can go here.
 - (void) awakeFromNib
 {
-    [self setTotalDisplayValue:@"0"];
+    [self setNumDisplayValue:@"0"];
 	[self setOpDisplayValue:@""];
 	[self setCurOp:None];
-	hasCurNum = NO;
+	isNumberBeingEntered = NO;
 }
 
 
@@ -30,33 +31,44 @@
     NSString* text = [sender title];
     NSLog(@"%@", text);
 
-	if( !hasCurNum )
+	if( !isNumberBeingEntered )
 	{
-		[self setTotalDisplayValue:@""];
-		hasCurNum = YES;
+		// this is NO (false) after an operation is performed and the result
+		// of the operation is display in numDisplayField.  We don't want to
+		// concatenate the new digit in the case, we want to clear the current
+		// display and start building a new number
+		
+		[self setNumDisplayValue:@""];
+		isNumberBeingEntered = YES;
 	}
 	
 	// parse digits
-    if ([@"0" isEqualToString:text] && ([[self totalDisplayValue] length] > 0)) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"0"]];
+	//
+	// This basically takes the title of the number button and concatentets it
+	// to the previous value, which is stored in numDisplayValue.
+	//
+	// There is an special case for 0 to prevent entering 0's before a non-zero integer
+	//
+    if ([@"0" isEqualToString:text] && ([[self numDisplayValue] length] > 0)) {
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"0"]];
     } else if ([@"1" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"1"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"1"]];
     } else if ([@"2" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"2"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"2"]];
     } else if ([@"3" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"3"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"3"]];
     } else if ([@"4" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"4"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"4"]];
 	} else if ([@"5" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"5"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"5"]];
     } else if ([@"6" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"6"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"6"]];
 	} else if ([@"7" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"7"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"7"]];
 	} else if ([@"8" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"8"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"8"]];
     } else if ([@"9" isEqualToString:text]) {
-        [self setTotalDisplayValue:[[self totalDisplayValue] stringByAppendingString:@"9"]];
+        [self setNumDisplayValue:[[self numDisplayValue] stringByAppendingString:@"9"]];
 	}
 }
 
@@ -84,24 +96,36 @@
 	NSInteger newTotal = 0;
 	if ([self curOp] || isEqualsButton)
 	{
-		newTotal  = [self integerResultFromOperand:[self accumulator]
-													operand:[[self totalDisplayValue] integerValue]
+		// if an operation button has already been pressed OR
+		// the equals button was pressed, run the calculation
+		// with the current operation
+		
+		newTotal  = [self integerResultFromOperand:[self total]
+													operand:[[self numDisplayValue] integerValue]
 												   operator:[self curOp]];
 	}
 	else
 	{
-		newTotal = [[self totalDisplayValue] integerValue];
+		// if this is the first operation, just save the currently displayed value
+		
+		newTotal = [[self numDisplayValue] integerValue];
 	}
 	
-	[self setAccumulator:newTotal];
-	[self setTotalDisplayValue:[[NSNumber numberWithInteger:newTotal] stringValue]];
-
+	// update the internal total
+	[self setTotal:newTotal];
 	
-	hasCurNum = NO;		
+	// update the displayed value
+	[self setNumDisplayValue:[[NSNumber numberWithInteger:newTotal] stringValue]];
+
+	// clear the isNumberBeingEntered flag
+	isNumberBeingEntered = NO;
+	
+	// set the current operation to the operation we just parsed
 	[self setCurOp:newOperation];
 
 	if (newOperation != None)
 	{
+		// update the operation display field
 		[self setOpDisplayValue:text];
 		
 	}
